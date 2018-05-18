@@ -1,0 +1,119 @@
+<html>
+<head>
+<!-- Latest compiled and minified CSS -->
+<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css">
+
+<!-- jQuery library -->
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
+
+<!-- Latest compiled JavaScript -->
+<script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js"></script>
+<link href="https://fonts.googleapis.com/css?family=Share+Tech" rel="stylesheet">
+ 
+<!--<script type ="text/javascript" src="/socket.io/socket.io.js"></script>-->
+<script type ="text/javascript" src="/socket.io/socket.io.js"></script>
+
+
+
+
+</head>
+
+<body>
+
+<div id="mainPage">
+    
+</div>
+
+<script type="text/tpl" id="namespace-group-tpl">
+<div class="container">
+  <p id="time"></p>
+<hr />
+<form id="login">
+	<div class="row">
+		<div class="col-md-9">
+			<input class="form-control" placeholder="Password" type="password"/>
+		</div>
+		<div class="col-md-3">
+			<button class="btn btn-primary form-control">Login</button>
+		</div>
+	</div>
+</form>
+
+<form id="message" style="display: none">
+	<div class="row">
+		<div class="col-md-9">
+			<input class="form-control" placeholder="Message"/>
+		</div>
+		<div class="col-md-3">
+			<button class="btn btn-primary form-control">Send</button>
+		</div>
+	</div>
+</form>
+<div id="messages"></div>
+</div>
+</script>
+
+<script>
+var socket = io('http://localhost:5000');
+var template = $('#namespace-group-tpl').text();
+  $el = template;
+  $('#mainPage').append($el);
+
+function renderMessage(data){
+
+ 
+
+  $('#messages').prepend(`<div class="text-${data.type}">
+  	    <hr />
+  	    <p>${data.message}</p>
+  	    </div>`);
+}
+
+socket.on('message.posted', renderMessage);
+
+    socket.on('join.group.success', function(){
+   	  $('#message').show();
+   	  $('#login').hide();
+   	  renderMessage({
+   		type:'success',
+   		message:'you have logged in'
+   	});
+});
+    
+
+
+$(function () {
+  
+	var template = $('#namespace-group-tpl').text();
+	
+
+
+	socket.on('seconds.update', function(data){
+  	var time = new Date(data.time);
+  	$('#time').text(
+  		time.getMonth() + '\/' + time.getDate() + '\/' +
+  		time.getFullYear() + ' ' + time.getHours() + ':' + 
+  		time.getMinutes() + ':' + time.getSeconds());
+  }); 
+
+  $('#login').on('submit', function(e){
+  	e.preventDefault();
+  	var password = $(this).find('input').val();
+  	console.log(password);
+  	socket.emit('join.group', {
+  		password:password
+  	});
+  });
+
+  $('#message').on('submit', function(e){
+  	e.preventDefault();
+  	var message = $(this).find('input').val();
+  	socket.emit('message.post',{
+  		message:message
+  	});
+  });
+
+});
+</script>
+</body>
+</html>
